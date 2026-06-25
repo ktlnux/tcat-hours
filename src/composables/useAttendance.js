@@ -440,12 +440,15 @@ export function useAttendance() {
   }
 
   // Semesters list for selector (only show semesters that can start a full program)
+  const HIDDEN_SEMESTERS = new Set(['spring-2025', 'summer-2025', 'fall-2026', 'spring-2027'])
   const maxStartIndex = SEMESTER_KEYS.length - SEMESTERS_REQUIRED
-  const semesters = SEMESTER_KEYS.slice(0, maxStartIndex + 1).map(k => ({
-    key: k,
-    name: SEMESTERS_DATA[k].name,
-    dateRange: formatDateRange(SEMESTERS_DATA[k].start, SEMESTERS_DATA[k].end)
-  }))
+  const semesters = SEMESTER_KEYS.slice(0, maxStartIndex + 1)
+    .filter(k => !HIDDEN_SEMESTERS.has(k))
+    .map(k => ({
+      key: k,
+      name: SEMESTERS_DATA[k].name,
+      dateRange: formatDateRange(SEMESTERS_DATA[k].start, SEMESTERS_DATA[k].end)
+    }))
 
   // Date bounds for time away inputs
   const semesterStart = computed(() => SD[selectedSemester.value]?.st || '')
