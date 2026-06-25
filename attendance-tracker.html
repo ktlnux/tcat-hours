@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Program hours tracker</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #ffffff; --bg2: #f5f5f4; --bg3: #eeede9;
+  --txt: #1c1c1a; --txt2: #6b6b67; --txt3: #9b9b97;
+  --brd: rgba(0,0,0,0.15); --brd2: rgba(0,0,0,0.3);
+  --info-bg: #e6f1fb; --info-brd: rgba(23,95,165,0.4); --info-txt: #185fa5;
+  --suc-bg: #eaf3de; --suc-brd: rgba(59,109,17,0.4); --suc-txt: #3b6d11;
+  --wrn-bg: #faeeda; --wrn-brd: rgba(133,79,11,0.4); --wrn-txt: #854f0b;
+  --dng-bg: #fcebeb; --dng-brd: rgba(163,45,45,0.4); --dng-txt: #a32d2d;
+  --r: 8px; --rl: 12px;
+  --font: system-ui, -apple-system, sans-serif;
+  --mono: ui-monospace, 'Cascadia Code', monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1c1c1a; --bg2: #252523; --bg3: #2e2e2c;
+    --txt: #f0efeb; --txt2: #9b9b97; --txt3: #6b6b67;
+    --brd: rgba(255,255,255,0.15); --brd2: rgba(255,255,255,0.3);
+    --info-bg: #0c2840; --info-brd: rgba(56,138,221,0.4); --info-txt: #85b7eb;
+    --suc-bg: #173404; --suc-brd: rgba(99,153,34,0.4); --suc-txt: #c0dd97;
+    --wrn-bg: #412402; --wrn-brd: rgba(186,117,23,0.4); --wrn-txt: #fac775;
+    --dng-bg: #501313; --dng-brd: rgba(226,75,74,0.4); --dng-txt: #f09595;
+  }
+}
+body { background: var(--bg3); min-height: 100vh; display: flex; justify-content: center; padding: 2rem 1rem 4rem; }
+.wrap { width: 100%; max-width: 680px; font-family: var(--font); }
+.dl { font-size: 13px; color: var(--txt2); margin-bottom: 1.75rem; }
+.enr-head { margin-bottom: 10px; }
+.enr-t { font-size: 15px; font-weight: 500; color: var(--txt); display: block; margin-bottom: 3px; }
+.enr-h { font-size: 12px; color: var(--txt2); }
+.sgrid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 1.75rem; }
+.sbtn {
+  display: flex; align-items: flex-start; gap: 10px;
+  background: var(--bg); border: 0.5px solid var(--brd);
+  border-radius: var(--r); padding: 12px; cursor: pointer;
+  text-align: left; transition: all .12s; width: 100%;
+}
+.sbtn:hover { background: var(--bg2); }
+.sbtn.act { border: 2px solid var(--info-txt); background: var(--info-bg); }
+.rdot {
+  flex-shrink: 0; width: 17px; height: 17px; border-radius: 50%;
+  border: 2px solid var(--brd2); margin-top: 2px;
+  position: relative; transition: border-color .12s;
+}
+.rdot::after { content:''; position:absolute; inset:3px; border-radius:50%; background:transparent; transition:background .12s; }
+.sbtn.act .rdot { border-color: var(--info-txt); }
+.sbtn.act .rdot::after { background: var(--info-txt); }
+.scon { flex: 1; min-width: 0; }
+.sn { display:block; font-size:13px; font-weight:500; color:var(--txt); margin-bottom:2px; }
+.sbtn.act .sn { color: var(--info-txt); }
+.sd { display:block; font-size:11px; color:var(--txt2); }
+.sbtn.act .sd { color: var(--info-txt); opacity: 0.8; }
+.lbl { font-size:12px; color:var(--txt2); margin-bottom:8px; }
+.lbl2 { font-size:13px; font-weight:500; color:var(--txt); margin-bottom:8px; }
+.inrow {
+  display:flex; align-items:center; background:var(--bg);
+  border: 0.5px solid var(--brd); border-radius: var(--r); margin-bottom: 10px;
+}
+.inrow:focus-within { border-color: var(--info-txt); box-shadow: 0 0 0 2px var(--info-bg); }
+#hi { flex:1; border:none; outline:none; padding:10px 14px; font-size:28px; font-family:var(--mono); font-weight:500; color:var(--txt); background:transparent; min-width:0; }
+.iu { padding:0 14px; font-size:13px; color:var(--txt2); white-space:nowrap; flex-shrink:0; }
+.chklbl {
+  display:flex; align-items:center; gap:8px; font-size:13px;
+  color:var(--txt2); cursor:pointer; margin-bottom:1.5rem; user-select:none;
+}
+.chklbl input[type=checkbox] { width:15px; height:15px; cursor:pointer; accent-color:var(--info-txt); }
+.stgrid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:1.25rem; }
+.sc { background:var(--bg2); border-radius:var(--r); padding:12px 14px; }
+.sl { font-size:11px; color:var(--txt2); margin-bottom:5px; }
+.sv { font-family:var(--mono); font-size:22px; font-weight:500; color:var(--txt); }
+.pcard { background:var(--bg); border:0.5px solid var(--brd); border-radius:var(--rl); padding:16px 20px; margin-bottom:10px; }
+.ar-lbl { font-size:15px; font-weight:500; color:var(--txt); margin-bottom:12px; }
+.phead { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:18px; }
+.pt { font-size:12px; color:var(--txt2); }
+.pp { font-family:var(--mono); font-size:30px; font-weight:500; }
+.bwrap { position:relative; padding-top:18px; margin-bottom:4px; }
+.nlbl { position:absolute; top:0; transform:translateX(-50%); font-family:var(--mono); font-size:11px; font-weight:500; color:var(--txt); }
+.btrack { height:22px; background:var(--bg2); border-radius:11px; position:relative; }
+.bfill { position:absolute; left:0; top:0; height:100%; border-radius:11px; transition:width .4s cubic-bezier(.34,1.56,.64,1),background-color .3s; }
+.bnotch { position:absolute; top:-5px; bottom:-5px; width:2.5px; background:var(--txt); border-radius:2px; transform:translateX(-50%); z-index:2; }
+.bscale { display:flex; justify-content:space-between; margin-top:5px; }
+.bscale span { font-family:var(--mono); font-size:11px; color:var(--txt2); }
+.sbox { border-radius:var(--r); padding:12px 14px; display:flex; align-items:flex-start; gap:10px; margin-bottom:1.5rem; border:0.5px solid; }
+.sico { font-size:18px; flex-shrink:0; margin-top:1px; }
+.smsg { font-size:14px; line-height:1.5; }
+.sdiv { display:flex; align-items:center; gap:12px; margin:2rem 0 1.5rem; }
+.sdiv::before,.sdiv::after { content:''; flex:1; height:0.5px; background:var(--brd); }
+.sdiv span { font-size:12px; font-weight:500; color:var(--txt2); white-space:nowrap; text-transform:uppercase; letter-spacing:.07em; }
+.psub { margin-bottom:1.25rem; }
+.arow { display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:8px; font-size:13px; color:var(--txt2); }
+.arow input[type="date"], .arow input[type="number"], .arow select {
+  border:0.5px solid var(--brd2); border-radius:var(--r); padding:6px 9px;
+  font-size:13px; font-family:var(--font); color:var(--txt); background:var(--bg);
+}
+.arow input[type="number"] { font-family:var(--mono); }
+.arow input:focus, .arow select:focus { outline:none; border-color:var(--info-txt); }
+.arow button { padding:6px 14px; border-radius:var(--r); border:0.5px solid var(--brd2); background:var(--bg2); color:var(--txt); font-size:13px; cursor:pointer; font-family:var(--font); }
+.arow button:hover { background:var(--bg3); }
+.ilist { display:flex; flex-direction:column; gap:6px; margin-bottom:4px; }
+.iitem { display:flex; align-items:center; gap:10px; padding:8px 12px; background:var(--bg2); border-radius:var(--r); }
+.itxt { flex:1; min-width:0; font-size:13px; color:var(--txt); }
+.isub { font-size:11px; color:var(--txt2); margin-top:2px; }
+.dbtn { border:none; background:none; cursor:pointer; color:var(--txt2); padding:4px 5px; border-radius:6px; display:flex; align-items:center; flex-shrink:0; }
+.dbtn:hover { color:var(--dng-txt); background:var(--dng-bg); }
+.ehint { font-size:12px; color:var(--txt3); font-style:italic; padding:4px 0; }
+.dnote { font-size:12px; color:var(--txt2); padding:10px 14px; background:var(--bg2); border-radius:var(--r); margin-bottom:1.25rem; line-height:1.75; border:0.5px solid transparent; }
+.dnote.warn { border-color:var(--wrn-brd); background:var(--wrn-bg); color:var(--wrn-txt); }
+.fn { font-size:12px; color:var(--txt2); line-height:1.9; border-top:0.5px solid var(--brd); padding-top:1rem; margin-top:1.25rem; }
+.mn { font-family:var(--mono); font-weight:500; color:var(--txt); }
+@media(max-width:500px) { .sgrid,.stgrid{grid-template-columns:repeat(2,1fr)} .arow{flex-direction:column;align-items:flex-start} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<p class="dl" id="dl"></p>
+
+<div class="enr-head">
+  <span class="enr-t">When did you start the program?</span>
+  <span class="enr-h">Select your enrollment semester — this sets your total program hours.</span>
+</div>
+<div class="sgrid">
+  <button class="sbtn" data-sem="spring" onclick="sel('spring')">
+    <span class="rdot"></span>
+    <span class="scon"><span class="sn">Spring 2026</span><span class="sd">Jan 12 – Apr 29</span></span>
+  </button>
+  <button class="sbtn" data-sem="summer" onclick="sel('summer')">
+    <span class="rdot"></span>
+    <span class="scon"><span class="sn">Summer 2026</span><span class="sd">May 11 – Aug 5</span></span>
+  </button>
+  <button class="sbtn" data-sem="fall" onclick="sel('fall')">
+    <span class="rdot"></span>
+    <span class="scon"><span class="sn">Fall 2026</span><span class="sd">Aug 17 – Dec 9</span></span>
+  </button>
+</div>
+
+<p class="lbl">Hours on my timesheet</p>
+<div class="inrow">
+  <input id="hi" type="number" min="0" step="0.5" placeholder="0.0" oninput="upd()">
+  <span class="iu">hours logged</span>
+</div>
+<label class="chklbl">
+  <input type="checkbox" id="incl-today" onchange="upd()">
+  Include today in the calculation
+</label>
+
+<div class="stgrid">
+  <div class="sc"><p class="sl">Possible hours</p><p class="sv" id="vp">—</p></div>
+  <div class="sc"><p class="sl">Days elapsed</p><p class="sv" id="vde">—</p></div>
+  <div class="sc"><p class="sl">Days remaining</p><p class="sv" id="vdr">—</p></div>
+</div>
+
+<div class="pcard">
+  <p class="ar-lbl">Attendance rate</p>
+  <div class="phead">
+    <span class="pt">% of possible hours logged to date</span>
+    <span class="pp" id="pp">—</span>
+  </div>
+  <div class="bwrap"><span class="nlbl" style="left:91%">91%</span>
+    <div class="btrack"><div class="bfill" id="bf" style="width:0%"></div><div class="bnotch" style="left:91%"></div></div>
+  </div>
+  <div class="bscale"><span>0%</span><span>100%</span></div>
+</div>
+
+<div class="sbox" id="sb" style="background:var(--bg2);border-color:var(--brd)">
+  <i class="ti ti-info-circle sico" id="si" style="color:var(--txt2)"></i>
+  <p class="smsg" id="sm" style="color:var(--txt2)">Select your semester and enter your timesheet total to see your attendance status.</p>
+</div>
+
+<div class="sdiv"><span>Graduation projection</span></div>
+<p style="font-size:13px;color:var(--txt2);line-height:1.6;margin-bottom:1.25rem">Assumes full attendance for all remaining class days through Fall 2026, adjusted for the factors below.</p>
+
+<div class="psub">
+  <p class="lbl2">Planned time away</p>
+  <div class="arow">
+    <span>From</span>
+    <input type="date" id="af" min="2026-01-12" max="2026-12-09">
+    <span>to</span>
+    <input type="date" id="at" min="2026-01-12" max="2026-12-09">
+    <button onclick="addAway()">+ Add</button>
+  </div>
+  <div class="ilist" id="al"><p class="ehint" id="ae">No time away added.</p></div>
+</div>
+
+<div class="psub">
+  <p class="lbl2">Real world impacts</p>
+  <div class="arow">
+    <span>Assume</span>
+    <input type="number" id="rh" min="0.5" max="6.5" step="0.5" placeholder="hrs" style="width:62px">
+    <span>hrs late</span>
+    <input type="number" id="rc" min="1" max="99" step="1" placeholder="#" style="width:50px">
+    <span>times a</span>
+    <select id="ru"><option value="week">week</option><option value="month">month</option><option value="semester">semester</option></select>
+    <button onclick="addRule()">+ Add</button>
+  </div>
+  <div class="ilist" id="rl"><p class="ehint" id="re">No adjustments added.</p></div>
+</div>
+
+<div class="pcard">
+  <div class="phead"><span class="pt">Projected graduation rate</span><span class="pp" id="prp">—</span></div>
+  <div class="bwrap"><span class="nlbl" style="left:91%">91%</span>
+    <div class="btrack"><div class="bfill" id="prb" style="width:0%"></div><div class="bnotch" style="left:91%"></div></div>
+  </div>
+  <div class="bscale"><span>0%</span><span>100%</span></div>
+</div>
+<div class="stgrid" style="margin-bottom:1rem">
+  <div class="sc"><p class="sl">Projected total</p><p class="sv" id="prt">—</p></div>
+  <div class="sc"><p class="sl">Program total</p><p class="sv" id="prm">—</p></div>
+  <div class="sc"><p class="sl">Future class days</p><p class="sv" id="prd">—</p></div>
+</div>
+<div class="dnote" id="dn">Enter your timesheet hours above to see a projection.</div>
+<div class="fn" id="fn"></div>
+
+</div>
+<script>
+const HPD=6.5,THR=0.91,KS=['spring','summer','fall'];
+const SD={
+  spring:{st:"2026-01-12",en:"2026-04-29",h:new Set(["2026-01-19","2026-03-02","2026-03-03","2026-03-04","2026-03-05","2026-03-06"])},
+  summer:{st:"2026-05-11",en:"2026-08-05",h:new Set(["2026-05-25","2026-06-19","2026-07-03"])},
+  fall:{st:"2026-08-17",en:"2026-12-09",h:new Set(["2026-09-07","2026-10-05","2026-10-06","2026-10-07","2026-10-08","2026-10-09","2026-11-23","2026-11-24","2026-11-25","2026-11-26","2026-11-27"])}
+};
+const g=id=>document.getElementById(id);
+function ds(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function cdays(s,e,h){
+  const c=new Date(s+"T12:00:00"),end=new Date(e+"T12:00:00"),days=[];
+  while(c<=end){const dw=c.getDay();if(dw>=1&&dw<=5&&!h.has(ds(c)))days.push(ds(c));c.setDate(c.getDate()+1);}
+  return days;
+}
+function inSems(f,t){
+  const days=[];
+  for(const k of KS){const s=SD[k],st=f>s.st?f:s.st,en=t<s.en?t:s.en;if(st>en)continue;days.push(...cdays(st,en,s.h));}
+  return days;
+}
+const PH={};for(const k of KS)PH[k]=cdays(SD[k].st,SD[k].en,SD[k].h).length*HPD;
+const ET={};for(let i=0;i<KS.length;i++)ET[KS[i]]=KS.slice(i).reduce((a,k)=>a+PH[k],0);
+const PD={};for(const k of KS)PD[k]=cdays(SD[k].st,SD[k].en,SD[k].h).length;
+
+function tod(){const n=new Date();return new Date(n.getFullYear(),n.getMonth(),n.getDate(),12)}
+function yest(){const t=tod();t.setDate(t.getDate()-1);return t}
+function tmr(){const t=tod();t.setDate(t.getDate()+1);return t}
+
+function defaultSem(){
+  const today=ds(tod());
+  for(const k of KS)if(today>=SD[k].st&&today<=SD[k].en)return k;
+  for(let i=KS.length-1;i>=0;i--)if(today>SD[KS[i]].en)return KS[i];
+  return KS[0];
+}
+
+function getCutoff(inclToday){return inclToday?ds(tod()):ds(yest())}
+
+function ptd(ek,inclToday){
+  const cutoff=getCutoff(inclToday),fi=KS.indexOf(ek);
+  let p=0;
+  for(let i=fi;i<KS.length;i++){
+    const k=KS[i],s=SD[k];if(cutoff<s.st)continue;
+    p+=cdays(s.st,cutoff<=s.en?cutoff:s.en,s.h).length*HPD;
+  }return p;
+}
+
+function daysElapsed(ek,inclToday){
+  const cutoff=getCutoff(inclToday),fi=KS.indexOf(ek);
+  let n=0;
+  for(let i=fi;i<KS.length;i++){
+    const k=KS[i],s=SD[k];if(cutoff<s.st)continue;
+    n+=cdays(s.st,cutoff<=s.en?cutoff:s.en,s.h).length;
+  }return n;
+}
+
+function daysRemaining(ek){
+  const tmrS=ds(tmr()),fi=KS.indexOf(ek);
+  let n=0;
+  for(let i=fi;i<KS.length;i++){
+    const k=KS[i],s=SD[k];
+    const st=tmrS>s.st?tmrS:s.st;if(st>s.en)continue;
+    n+=cdays(st,s.en,s.h).length;
+  }return n;
+}
+
+function semOf(d){for(const k of KS)if(d>=SD[k].st&&d<=SD[k].en)return k;return null;}
+function fmtD(str){const[y,m,d]=str.split('-');return['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m-1]+' '+ +d+', '+y}
+function fmtH(n){return n.toFixed(1)+'h'}
+
+function clr(pct){
+  if(pct>=91)return{f:'#639922',t:'var(--suc-txt)',bg:'var(--suc-bg)',bd:'var(--suc-brd)',ic:'ti-circle-check',it:'var(--suc-txt)'};
+  if(pct>=75)return{f:'#BA7517',t:'var(--wrn-txt)',bg:'var(--wrn-bg)',bd:'var(--wrn-brd)',ic:'ti-alert-triangle',it:'var(--wrn-txt)'};
+  return{f:'#E24B4A',t:'var(--dng-txt)',bg:'var(--dng-bg)',bd:'var(--dng-brd)',ic:'ti-alert-circle',it:'var(--dng-txt)'};
+}
+
+let cS=defaultSem(),aws=[],rls=[],nid=0;
+
+function sel(s){cS=s;document.querySelectorAll('.sbtn').forEach(b=>b.classList.toggle('act',b.dataset.sem===s));upd();}
+
+function addAway(){
+  const f=g('af').value,raw=g('at').value;if(!f)return;
+  const e=(!raw||raw<f)?f:raw;
+  aws.push({id:nid++,s:f,e});
+  g('af').value='';g('at').value='';
+  renderLists();upd();
+}
+function rmAway(id){aws=aws.filter(x=>x.id!==id);renderLists();upd();}
+
+function addRule(){
+  const h=parseFloat(g('rh').value),c=parseInt(g('rc').value),u=g('ru').value;
+  if(!h||h<0.5||h>6.5||!c||c<1)return;
+  rls.push({id:nid++,hours:h,count:c,unit:u});
+  g('rh').value='';g('rc').value='';
+  renderLists();upd();
+}
+function rmRule(id){rls=rls.filter(x=>x.id!==id);renderLists();upd();}
+
+function renderLists(){
+  const tmrS=ds(tmr());
+  const al=g('al'),ae=g('ae');
+  al.querySelectorAll('.iitem').forEach(e=>e.remove());
+  if(aws.length===0){ae.style.display='';}
+  else{
+    ae.style.display='none';
+    aws.forEach(a=>{
+      const fs=a.s>tmrS?a.s:tmrS,fd=inSems(fs,a.e).length;
+      const rng=a.s===a.e?fmtD(a.s):fmtD(a.s)+' \u2013 '+fmtD(a.e);
+      const d=document.createElement('div');d.className='iitem';
+      d.innerHTML='<div class="itxt">'+rng+'<div class="isub">'+fd+' future class day'+(fd!==1?'s':'')+' \u00b7 \u2212'+fmtH(fd*HPD)+'</div></div>'
+        +'<button class="dbtn" onclick="rmAway('+a.id+')" aria-label="Remove"><i class="ti ti-trash" style="font-size:15px"></i></button>';
+      al.appendChild(d);
+    });
+  }
+  const rl=g('rl'),re=g('re');
+  rl.querySelectorAll('.iitem').forEach(e=>e.remove());
+  if(rls.length===0){re.style.display='';}
+  else{
+    re.style.display='none';
+    rls.forEach(r=>{
+      const d=document.createElement('div');d.className='iitem';
+      d.innerHTML='<div class="itxt">Assume '+r.hours+'h late '+r.count+' time'+(r.count!==1?'s':'')+' a '+r.unit+'</div>'
+        +'<button class="dbtn" onclick="rmRule('+r.id+')" aria-label="Remove"><i class="ti ti-trash" style="font-size:15px"></i></button>';
+      rl.appendChild(d);
+    });
+  }
+}
+
+function calcProj(logged){
+  const tmrS=ds(tmr()),fa=inSems(tmrS,SD.fall.en);
+  const awSet=new Set();
+  for(const a of aws){const fs=a.s>tmrS?a.s:tmrS;inSems(fs,a.e).forEach(d=>awSet.add(d));}
+  const pdays=fa.filter(d=>!awSet.has(d)),awC=fa.length-pdays.length,fh=pdays.length*HPD;
+  let totDed=0;
+  for(const r of rls){
+    let p=0;
+    if(r.unit==='week'){const w=new Set();pdays.forEach(d=>{const dt=new Date(d+"T12:00:00"),dw=dt.getDay(),m=new Date(dt);m.setDate(dt.getDate()-(dw===0?6:dw-1));w.add(ds(m));});p=w.size;}
+    else if(r.unit==='month'){const m=new Set();pdays.forEach(d=>m.add(d.slice(0,7)));p=m.size;}
+    else{const ss=new Set();pdays.forEach(d=>{const sk=semOf(d);if(sk)ss.add(sk);});p=ss.size;}
+    totDed+=p*r.count*r.hours;
+  }
+  return{fa,pdays,awC,fh,totDed,projTotal:logged+Math.max(0,fh-totDed),over:totDed>fh&&fh>0};
+}
+
+function upd(){
+  const inclToday=g('incl-today').checked;
+  const raw=g('hi').value.trim(),hasIn=raw!=='',logged=hasIn?Math.max(0,parseFloat(raw)||0):0;
+  const pd=ptd(cS,inclToday),hd=pd>0,pct=hd?(logged/pd)*100:0,cap=Math.min(pct,100);
+  const de=daysElapsed(cS,inclToday),dr=daysRemaining(cS);
+  const c=hd?clr(pct):{f:'#888',t:'var(--txt2)',bg:'var(--bg2)',bd:'var(--brd)',ic:'ti-info-circle',it:'var(--txt2)'};
+
+  g('vp').textContent=hd?fmtH(pd):'—';
+  g('vde').textContent=hd?de:'—';
+  g('vdr').textContent=dr>0?dr:'—';
+
+  const pp=g('pp');pp.textContent=hd?pct.toFixed(1)+'%':'—';pp.style.color=c.t;
+  const bf=g('bf');bf.style.width=cap+'%';bf.style.background=c.f;bf.style.minWidth=(hd&&cap>0)?'4px':'0';
+  const sb=g('sb');sb.style.background=c.bg;sb.style.borderColor=c.bd;
+  const si=g('si');si.className='ti '+c.ic+' sico';si.style.color=c.it;
+  const sm=g('sm');sm.style.color=c.t;
+  const sur=fmtH(Math.max(0,logged-pd*THR)),ned=fmtH(Math.max(0,pd*THR-logged));
+  if(!hd&&cS==='fall')sm.textContent='Fall semester begins August 17, 2026. No class hours have elapsed yet.';
+  else if(!hd)sm.textContent='Select your semester and enter your timesheet total to see your attendance status.';
+  else if(!hasIn)sm.textContent='Enter your timesheet total above to calculate your attendance rate.';
+  else if(pct>=91)sm.textContent='On track \u2014 you are '+sur+' above the 91% threshold.';
+  else sm.textContent='At risk \u2014 you need '+ned+' more to reach the 91% graduation threshold.';
+
+  const proj=calcProj(logged),pRate=ET[cS]>0?(proj.projTotal/ET[cS])*100:0,pCap=Math.min(pRate,100),pc=clr(pRate);
+  const prp=g('prp');prp.textContent=pRate.toFixed(1)+'%';prp.style.color=pc.t;
+  const prb=g('prb');prb.style.width=pCap+'%';prb.style.background=pc.f;prb.style.minWidth=(proj.projTotal>0&&pCap>0)?'4px':'0';
+  g('prt').textContent=fmtH(proj.projTotal);
+  g('prm').textContent=fmtH(ET[cS]);
+  g('prd').textContent=proj.fa.length;
+
+  const dn=g('dn');
+  if(!hasIn){dn.innerHTML='Enter your timesheet hours above to see a projection.';dn.className='dnote';}
+  else if(proj.over){dn.innerHTML='<i class="ti ti-alert-triangle" style="vertical-align:-2px;font-size:13px"></i> Lateness adjustments exceed remaining class hours \u2014 projected additional hours capped at 0.';dn.className='dnote warn';}
+  else{
+    const pts=[];
+    if(proj.awC>0)pts.push(proj.awC+' class day'+(proj.awC!==1?'s':'')+' planned away (\u2212'+fmtH(proj.awC*HPD)+')');
+    if(proj.totDed>0)pts.push('lateness deductions \u2212'+fmtH(proj.totDed));
+    dn.innerHTML=pts.length?pts.join(' \u00b7 '):'No adjustments \u2014 projection assumes 100% attendance for all remaining class days.';
+    dn.className='dnote';
+  }
+
+  const sn={spring:'Spring 2026',summer:'Summer 2026',fall:'Fall 2026'};
+  g('fn').innerHTML='Program from '+sn[cS]+': <span class="mn">'+fmtH(ET[cS])+'</span> \u00b7 91% threshold: <span class="mn">'+fmtH(ET[cS]*THR)+'</span><br>'
+    +'Spring: <span class="mn">'+fmtH(PH.spring)+'</span> \u00b7 Summer: <span class="mn">'+fmtH(PH.summer)+'</span> \u00b7 Fall: <span class="mn">'+fmtH(PH.fall)+'</span> \u00b7 6.5h / class day';
+}
+
+document.querySelectorAll('.sbtn').forEach(b=>b.classList.toggle('act',b.dataset.sem===cS));
+g('dl').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+g('af').addEventListener('change',function(){const t=g('at');if(!t.value)t.value=this.value;t.min=this.value;});
+
+console.group('Program semester data');
+const semLabels={spring:'Spring 2026',summer:'Summer 2026',fall:'Fall 2026'};
+for(const k of KS){
+  const s=SD[k],days=PD[k],hours=PH[k];
+  console.log(semLabels[k]+' | '+s.st+' \u2013 '+s.en+' | '+hours.toFixed(1)+'h possible | '+days+' class days');
+}
+console.groupEnd();
+
+upd();
+</script>
+</body>
+</html>
