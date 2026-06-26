@@ -255,16 +255,6 @@ export function useAttendance() {
         type: 'info'
       }
     }
-    if (!hasInput.value) {
-      return {
-        fill: '#175fa5',
-        text: 'var(--info-txt)',
-        bg: 'var(--info-bg)',
-        border: 'var(--info-brd)',
-        icon: 'ti-info-circle',
-        type: 'info'
-      }
-    }
     return getStatusColor(attendanceRate.value)
   })
 
@@ -277,9 +267,6 @@ export function useAttendance() {
       const startDate = new Date(firstSem.start + 'T12:00:00')
       const formatted = startDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
       return `${firstSem.name} begins ${formatted}. No class hours have elapsed yet.`
-    }
-    if (!hasInput.value) {
-      return 'Enter your timesheet hours total by logging into the Time Clock dashboard.'
     }
     if (attendanceRate.value >= 91) {
       return `On track — you are ${surplus} above the 91% threshold.`
@@ -478,6 +465,7 @@ export function useAttendance() {
     hasInput,
     loggedHours,
     possibleHours,
+    hasInput,
     hasData,
     daysElapsed,
     daysRemaining,

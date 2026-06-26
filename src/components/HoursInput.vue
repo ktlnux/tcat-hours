@@ -1,5 +1,6 @@
 <template>
   <div>
+    <p class="intro-text">Use this tool to see how your current time clock hours track against the program attendance requirements for Summer 2026. To get started, go to the Time Clock and log into dashboard. Paste your total hours into the box below.</p>
     <div class="enr-head">
       <span class="enr-t">Total Hours in Time Clock</span>
     </div>

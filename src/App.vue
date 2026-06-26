@@ -24,12 +24,14 @@
     />
 
     <StatusMessage
+      v-if="hasInput"
       :message="statusMessage"
       :color="statusColor"
     />
 
     <div class="sdiv"><span>End of Semester Projection</span></div>
-    <p class="proj-intro">{{ projectionIntro }}</p>
+    <p class="intro-text">See how your attendance rate will look at the end of the semester.<br />Assumes full attendance for all remaining class days through Summer 2026, adjusted for the factors below.</p>
+    <!-- <p class="proj-intro">{{ projectionIntro }}</p> -->
 
     <TimeAwayManager
       :modelValue="awayPeriods"
@@ -58,7 +60,12 @@
     />
 
     <ProgramFooter :data="footerData" />
-    <FeedbackButton />
+
+    <div class="page-end">
+      <hr class="page-rule" />
+      <p class="made-by">&lt;3 made by ktln + claude</p>
+      <FeedbackButton />
+    </div>
   </div>
 </template>
 
@@ -80,6 +87,7 @@ const {
   includeToday,
   awayPeriods,
   impactRules,
+  hasInput,
   hasData,
   possibleHours,
   daysElapsed,
