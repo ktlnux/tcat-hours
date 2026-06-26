@@ -287,10 +287,12 @@ export function useAttendance() {
     return `At risk — you need ${needed} more to reach the 91% graduation threshold.`
   })
 
+  const semesterTotal = computed(() => PH[selectedSemester.value] || 0)
+
   const projection = computed(() => {
     const tmrS = ds(tmr())
-    const lastSem = lastProgramSemester.value
-    if (!lastSem) {
+    const sem = selectedSemester.value
+    if (!sem || !SD[sem]) {
       return {
         futureDays: [],
         presentDays: [],
@@ -302,12 +304,12 @@ export function useAttendance() {
       }
     }
 
-    const fa = inSems(tmrS, SD[lastSem].en, programSemesters.value)
+    const fa = inSems(tmrS, SD[sem].en, [sem])
 
     const awSet = new Set()
     for (const a of awayPeriods.value) {
       const fs = a.start > tmrS ? a.start : tmrS
-      inSems(fs, a.end, programSemesters.value).forEach(d => awSet.add(d))
+      inSems(fs, a.end, [sem]).forEach(d => awSet.add(d))
     }
 
     const pdays = fa.filter(d => !awSet.has(d))
@@ -334,7 +336,7 @@ export function useAttendance() {
       } else {
         const ss = new Set()
         pdays.forEach(d => {
-          const sk = semOf(d, programSemesters.value)
+          const sk = semOf(d, [sem])
           if (sk) ss.add(sk)
         })
         p = ss.size
@@ -354,8 +356,8 @@ export function useAttendance() {
   })
 
   const projectedRate = computed(() => {
-    if (programTotal.value <= 0) return 0
-    return (projection.value.projectedTotal / programTotal.value) * 100
+    if (semesterTotal.value <= 0) return 0
+    return (projection.value.projectedTotal / semesterTotal.value) * 100
   })
 
   const projectedCapped = computed(() => Math.min(projectedRate.value, 100))
@@ -403,9 +405,9 @@ export function useAttendance() {
 
   // Projection intro text
   const projectionIntro = computed(() => {
-    const lastSem = lastProgramSemester.value
-    if (!lastSem) return ''
-    return `Assumes full attendance for all remaining class days through ${SEMESTERS_DATA[lastSem].name}, adjusted for the factors below.`
+    const sem = selectedSemester.value
+    if (!sem) return ''
+    return `Assumes full attendance for all remaining class days through ${SEMESTERS_DATA[sem].name}, adjusted for the factors below.`
   })
 
   // Methods
@@ -440,7 +442,7 @@ export function useAttendance() {
   function getAwayInfo(away) {
     const tmrS = ds(tmr())
     const fs = away.start > tmrS ? away.start : tmrS
-    const fd = inSems(fs, away.end, programSemesters.value).length
+    const fd = inSems(fs, away.end, [selectedSemester.value]).length
     const rng = away.start === away.end ? fmtD(away.start) : `${fmtD(away.start)} – ${fmtD(away.end)}`
     return {
       range: rng,
@@ -462,10 +464,7 @@ export function useAttendance() {
 
   // Date bounds for time away inputs
   const semesterStart = computed(() => SD[selectedSemester.value]?.st || '')
-  const semesterEnd = computed(() => {
-    const lastSem = lastProgramSemester.value
-    return lastSem ? SD[lastSem].en : ''
-  })
+  const semesterEnd = computed(() => SD[selectedSemester.value]?.en || '')
 
   return {
     // State
@@ -488,6 +487,7 @@ export function useAttendance() {
     statusMessage,
     projection,
     programTotal,
+    semesterTotal,
     programSemesters,
     projectedRate,
     projectedCapped,

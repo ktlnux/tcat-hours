@@ -2,7 +2,7 @@
   <div>
     <div class="pcard">
       <div class="phead">
-        <span class="pt">Projected graduation rate</span>
+        <span class="pt">Projected semester rate</span>
         <span class="pp" :style="{ color: color.text }">{{ displayRate }}</span>
       </div>
       <div class="bwrap">
@@ -31,7 +31,7 @@
         <p class="sv">{{ formattedTotal }}</p>
       </div>
       <div class="sc">
-        <p class="sl">Program total</p>
+        <p class="sl">Semester total</p>
         <p class="sv">{{ formattedProgramTotal }}</p>
       </div>
       <div class="sc">

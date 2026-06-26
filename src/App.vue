@@ -28,7 +28,7 @@
       :color="statusColor"
     />
 
-    <div class="sdiv"><span>Graduation projection</span></div>
+    <div class="sdiv"><span>End of Semester Projection</span></div>
     <p class="proj-intro">{{ projectionIntro }}</p>
 
     <TimeAwayManager
@@ -50,7 +50,7 @@
       :rate="projectedRate"
       :cappedRate="projectedCapped"
       :total="projection.projectedTotal"
-      :programTotal="programTotal"
+      :programTotal="semesterTotal"
       :futureDays="projection.futureDays.length"
       :note="projectionNote"
       :threshold="threshold"
@@ -58,6 +58,7 @@
     />
 
     <ProgramFooter :data="footerData" />
+    <FeedbackButton />
   </div>
 </template>
 
@@ -72,6 +73,7 @@ import TimeAwayManager from './components/TimeAwayManager.vue'
 import ImpactsManager from './components/ImpactsManager.vue'
 import ProjectionCard from './components/ProjectionCard.vue'
 import ProgramFooter from './components/ProgramFooter.vue'
+import FeedbackButton from './components/FeedbackButton.vue'
 
 const {
   hoursLogged,
@@ -88,6 +90,7 @@ const {
   statusMessage,
   projection,
   programTotal,
+  semesterTotal,
   projectedRate,
   projectedCapped,
   projectionColor,

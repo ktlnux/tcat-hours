@@ -1,6 +1,8 @@
 <template>
   <div>
-    <p class="lbl">Hours on my timesheet</p>
+    <div class="enr-head">
+      <span class="enr-t">Total Hours in Time Clock</span>
+    </div>
     <div class="inrow">
       <input
         class="hi"
