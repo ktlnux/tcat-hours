@@ -199,7 +199,7 @@ function formatDateRange(start, end) {
 
 export function useAttendance() {
   // Reactive state
-  const selectedSemester = ref(defaultSem())
+  const selectedSemester = ref('summer-2026')
   const hoursLogged = ref('')
   const includeToday = ref(false)
   const awayPeriods = ref([])
@@ -255,6 +255,16 @@ export function useAttendance() {
         type: 'info'
       }
     }
+    if (!hasInput.value) {
+      return {
+        fill: '#175fa5',
+        text: 'var(--info-txt)',
+        bg: 'var(--info-bg)',
+        border: 'var(--info-brd)',
+        icon: 'ti-info-circle',
+        type: 'info'
+      }
+    }
     return getStatusColor(attendanceRate.value)
   })
 
@@ -269,7 +279,7 @@ export function useAttendance() {
       return `${firstSem.name} begins ${formatted}. No class hours have elapsed yet.`
     }
     if (!hasInput.value) {
-      return 'Enter your timesheet total above to calculate your attendance rate.'
+      return 'Enter your timesheet hours total by logging into the Time Clock dashboard.'
     }
     if (attendanceRate.value >= 91) {
       return `On track — you are ${surplus} above the 91% threshold.`

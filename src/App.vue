@@ -3,11 +3,6 @@
     <h1>TCAT Attendance Tracker</h1>
     <p class="dl">{{ currentDate }}</p>
 
-    <SemesterSelector
-      v-model="selectedSemester"
-      :semesters="semesters"
-    />
-
     <HoursInput
       v-model="hoursLogged"
       :includeToday="includeToday"
@@ -69,7 +64,6 @@
 <script setup>
 import { computed } from 'vue'
 import { useAttendance } from './composables/useAttendance'
-import SemesterSelector from './components/SemesterSelector.vue'
 import HoursInput from './components/HoursInput.vue'
 import StatsGrid from './components/StatsGrid.vue'
 import AttendanceCard from './components/AttendanceCard.vue'
@@ -80,7 +74,6 @@ import ProjectionCard from './components/ProjectionCard.vue'
 import ProgramFooter from './components/ProgramFooter.vue'
 
 const {
-  selectedSemester,
   hoursLogged,
   includeToday,
   awayPeriods,
@@ -101,7 +94,6 @@ const {
   projectionNote,
   projectionIntro,
   footerData,
-  semesters,
   addAway,
   removeAway,
   addRule,
