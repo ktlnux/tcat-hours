@@ -108,39 +108,28 @@ function getCutoff(inclToday) {
 
 function ptd(enrollmentKey, inclToday) {
   const cutoff = getCutoff(inclToday)
-  const programSems = getProgramSemesters(enrollmentKey)
-  let p = 0
-  for (const k of programSems) {
-    const s = SD[k]
-    if (cutoff < s.st) continue
-    p += cdays(s.st, cutoff <= s.en ? cutoff : s.en, s.h).length * HPD
-  }
-  return p
+  const s = SD[enrollmentKey]
+  if (!s || cutoff < s.st) return 0
+  return cdays(s.st, cutoff <= s.en ? cutoff : s.en, s.h).length * HPD
 }
 
 function calcDaysElapsed(enrollmentKey, inclToday) {
   const cutoff = getCutoff(inclToday)
-  const programSems = getProgramSemesters(enrollmentKey)
-  let n = 0
-  for (const k of programSems) {
-    const s = SD[k]
-    if (cutoff < s.st) continue
-    n += cdays(s.st, cutoff <= s.en ? cutoff : s.en, s.h).length
-  }
-  return n
+  const s = SD[enrollmentKey]
+  if (!s || cutoff < s.st) return 0
+  return cdays(s.st, cutoff <= s.en ? cutoff : s.en, s.h).length
 }
 
-function calcDaysRemaining(enrollmentKey) {
-  const tmrS = ds(tmr())
-  const programSems = getProgramSemesters(enrollmentKey)
-  let n = 0
-  for (const k of programSems) {
-    const s = SD[k]
-    const st = tmrS > s.st ? tmrS : s.st
-    if (st > s.en) continue
-    n += cdays(st, s.en, s.h).length
-  }
-  return n
+function calcDaysRemaining(enrollmentKey, inclToday) {
+  // Start the day after the elapsed cutoff so elapsed + remaining partition the
+  // semester with no gap or overlap. Cutoff is today when today is included,
+  // otherwise yesterday — so remaining starts tomorrow or today respectively.
+  const startS = inclToday ? ds(tmr()) : ds(tod())
+  const s = SD[enrollmentKey]
+  if (!s) return 0
+  const st = startS > s.st ? startS : s.st
+  if (st > s.en) return 0
+  return cdays(st, s.en, s.h).length
 }
 
 function semOf(d, semesterKeys) {
@@ -235,7 +224,7 @@ export function useAttendance() {
 
   const daysElapsed = computed(() => calcDaysElapsed(selectedSemester.value, includeToday.value))
 
-  const daysRemaining = computed(() => calcDaysRemaining(selectedSemester.value))
+  const daysRemaining = computed(() => calcDaysRemaining(selectedSemester.value, includeToday.value))
 
   const attendanceRate = computed(() => {
     if (!hasData.value) return 0
