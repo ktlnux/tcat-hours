@@ -188,7 +188,7 @@ function formatDateRange(start, end) {
 
 export function useAttendance() {
   // Reactive state
-  const selectedSemester = ref('summer-2026')
+  const selectedSemester = ref(defaultSem())
   const hoursLogged = ref('')
   const includeToday = ref(false)
   const awayPeriods = ref([])
