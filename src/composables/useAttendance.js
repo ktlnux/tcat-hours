@@ -1,7 +1,6 @@
 import { ref, computed } from 'vue'
 import scheduleData from '../data/schedule.json'
 
-const HPD = scheduleData.hoursPerDay
 const THR = scheduleData.graduationThreshold
 const SEMESTERS_REQUIRED = scheduleData.semestersRequired || 3
 const SEMESTERS_DATA = scheduleData.semesters
@@ -17,7 +16,8 @@ for (const k of SEMESTER_KEYS) {
   SD[k] = {
     st: SEMESTERS_DATA[k].start,
     en: SEMESTERS_DATA[k].end,
-    h: new Set(SEMESTERS_DATA[k].holidays)
+    h: new Set(SEMESTERS_DATA[k].holidays),
+    hpd: SEMESTERS_DATA[k].hoursPerDay
   }
 }
 
@@ -63,7 +63,7 @@ function inSems(f, t, semesterKeys) {
 // Pre-compute possible hours per semester
 const PH = {}
 for (const k of SEMESTER_KEYS) {
-  PH[k] = cdays(SD[k].st, SD[k].en, SD[k].h).length * HPD
+  PH[k] = cdays(SD[k].st, SD[k].en, SD[k].h).length * SD[k].hpd
 }
 
 // Pre-compute days per semester
@@ -110,7 +110,7 @@ function ptd(enrollmentKey, inclToday) {
   const cutoff = getCutoff(inclToday)
   const s = SD[enrollmentKey]
   if (!s || cutoff < s.st) return 0
-  return cdays(s.st, cutoff <= s.en ? cutoff : s.en, s.h).length * HPD
+  return cdays(s.st, cutoff <= s.en ? cutoff : s.en, s.h).length * s.hpd
 }
 
 function calcDaysElapsed(enrollmentKey, inclToday) {
@@ -290,7 +290,7 @@ export function useAttendance() {
 
     const pdays = fa.filter(d => !awSet.has(d))
     const awC = fa.length - pdays.length
-    const fh = pdays.length * HPD
+    const fh = pdays.length * SD[sem].hpd
 
     let totDed = 0
     for (const r of impactRules.value) {
@@ -352,7 +352,7 @@ export function useAttendance() {
     }
     const pts = []
     if (projection.value.awayCount > 0) {
-      pts.push(`${projection.value.awayCount} class day${projection.value.awayCount !== 1 ? 's' : ''} planned away (−${fmtH(projection.value.awayCount * HPD)})`)
+      pts.push(`${projection.value.awayCount} class day${projection.value.awayCount !== 1 ? 's' : ''} planned away (−${fmtH(projection.value.awayCount * SD[selectedSemester.value].hpd)})`)
     }
     if (projection.value.totalDeduction > 0) {
       pts.push(`lateness deductions −${fmtH(projection.value.totalDeduction)}`)
@@ -423,7 +423,7 @@ export function useAttendance() {
     return {
       range: rng,
       futureDays: fd,
-      hoursImpact: fmtH(fd * HPD)
+      hoursImpact: fmtH(fd * SD[selectedSemester.value].hpd)
     }
   }
 
@@ -441,6 +441,8 @@ export function useAttendance() {
   // Date bounds for time away inputs
   const semesterStart = computed(() => SD[selectedSemester.value]?.st || '')
   const semesterEnd = computed(() => SD[selectedSemester.value]?.en || '')
+
+  const hoursPerDay = computed(() => SD[selectedSemester.value]?.hpd || 0)
 
   return {
     // State
@@ -485,6 +487,6 @@ export function useAttendance() {
 
     // Constants
     threshold: THR,
-    hoursPerDay: HPD
+    hoursPerDay
   }
 }

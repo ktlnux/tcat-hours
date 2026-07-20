@@ -1,5 +1,4 @@
 {
-  "hoursPerDay": 6.5,
   "graduationThreshold": 0.91,
   "semestersRequired": 3,
   "semesters": {
@@ -7,6 +6,7 @@
       "name": "Spring 2025",
       "start": "2025-01-13",
       "end": "2025-05-02",
+      "hoursPerDay": 6.25,
       "holidays": [
         "2025-01-20",
         "2025-03-10",
@@ -20,6 +20,7 @@
       "name": "Summer 2025",
       "start": "2025-05-12",
       "end": "2025-08-06",
+      "hoursPerDay": 6.5,
       "holidays": [
         "2025-05-26",
         "2025-06-19",
@@ -30,6 +31,7 @@
       "name": "Fall 2025",
       "start": "2025-08-18",
       "end": "2025-12-10",
+      "hoursPerDay": 6.25,
       "holidays": [
         "2025-09-01",
         "2025-10-06",
@@ -48,6 +50,7 @@
       "name": "Spring 2026",
       "start": "2026-01-12",
       "end": "2026-04-29",
+      "hoursPerDay": 6.25,
       "holidays": [
         "2026-01-19",
         "2026-03-02",
@@ -61,6 +64,7 @@
       "name": "Summer 2026",
       "start": "2026-05-11",
       "end": "2026-08-05",
+      "hoursPerDay": 6.5,
       "holidays": [
         "2026-05-25",
         "2026-06-19",
@@ -71,6 +75,7 @@
       "name": "Fall 2026",
       "start": "2026-08-17",
       "end": "2026-12-09",
+      "hoursPerDay": 6.25,
       "holidays": [
         "2026-09-07",
         "2026-10-05",
@@ -89,6 +94,7 @@
       "name": "Spring 2027",
       "start": "2027-01-11",
       "end": "2027-04-28",
+      "hoursPerDay": 6.25,
       "holidays": [
         "2027-01-18",
         "2027-03-08",
@@ -102,6 +108,7 @@
       "name": "Summer 2027",
       "start": "2027-05-10",
       "end": "2027-08-04",
+      "hoursPerDay": 6.5,
       "holidays": [
         "2027-05-31",
         "2027-06-18",
@@ -112,6 +119,7 @@
       "name": "Fall 2027",
       "start": "2027-08-16",
       "end": "2027-12-08",
+      "hoursPerDay": 6.25,
       "holidays": [
         "2027-09-06",
         "2027-10-04",
