@@ -265,6 +265,8 @@ export function useAttendance() {
 
   const semesterTotal = computed(() => PH[selectedSemester.value] || 0)
 
+  const currentSemesterName = computed(() => SEMESTERS_DATA[selectedSemester.value]?.name || '')
+
   const projection = computed(() => {
     const tmrS = ds(tmr())
     const sem = selectedSemester.value
@@ -428,7 +430,7 @@ export function useAttendance() {
   }
 
   // Semesters list for selector (only show semesters that can start a full program)
-  const HIDDEN_SEMESTERS = new Set(['spring-2025', 'summer-2025', 'fall-2026', 'spring-2027'])
+  const HIDDEN_SEMESTERS = new Set(['spring-2025', 'summer-2025', 'spring-2027'])
   const maxStartIndex = SEMESTER_KEYS.length - SEMESTERS_REQUIRED
   const semesters = SEMESTER_KEYS.slice(0, maxStartIndex + 1)
     .filter(k => !HIDDEN_SEMESTERS.has(k))
@@ -467,6 +469,7 @@ export function useAttendance() {
     projection,
     programTotal,
     semesterTotal,
+    currentSemesterName,
     programSemesters,
     projectedRate,
     projectedCapped,

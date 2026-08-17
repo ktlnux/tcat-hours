@@ -1,6 +1,6 @@
 <template>
   <div>
-    <p class="intro-text"><span class="intro-em">Use this tool to see how your current time clock hours track against the program attendance requirements for Summer 2026.</span> To get started, paste your total hours into the box below.</p>
+    <p class="intro-text"><span class="intro-em">Use this tool to see how your current time clock hours track against the program attendance requirements for {{ semesterName }}.</span> To get started, paste your total hours into the box below.</p>
 
     <Teleport to="body">
       <div v-if="showInstructions" class="fb-overlay" @click.self="showInstructions = false">
@@ -63,6 +63,10 @@ defineProps({
   includeToday: {
     type: Boolean,
     default: false
+  },
+  semesterName: {
+    type: String,
+    default: ''
   }
 })
 

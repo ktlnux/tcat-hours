@@ -6,6 +6,7 @@
     <HoursInput
       v-model="hoursLogged"
       :includeToday="includeToday"
+      :semesterName="currentSemesterName"
       @update:includeToday="includeToday = $event"
     />
 
@@ -30,8 +31,7 @@
     />
 
     <div class="sdiv"><span>End of Semester Projection</span></div>
-    <p class="intro-text"><span class="intro-em">See how your attendance rate will look at the end of the semester.</span> Assumes full attendance for all remaining class days through Summer 2026, adjusted for the factors below.</p>
-    <!-- <p class="proj-intro">{{ projectionIntro }}</p> -->
+    <p class="intro-text"><span class="intro-em">See how your attendance rate will look at the end of the semester.</span> Assumes full attendance for all remaining class days through {{ currentSemesterName }}, adjusted for the factors below.</p>
 
     <TimeAwayManager
       :modelValue="awayPeriods"
@@ -103,7 +103,7 @@ const {
   projectedCapped,
   projectionColor,
   projectionNote,
-  projectionIntro,
+  currentSemesterName,
   footerData,
   addAway,
   removeAway,
