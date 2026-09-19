@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import scheduleData from '../data/schedule.json'
 
 const THR = scheduleData.graduationThreshold
@@ -13,17 +13,49 @@ const SEMESTER_KEYS = Object.keys(SEMESTERS_DATA).sort((a, b) => {
 // Convert holidays arrays to Sets for efficient lookup
 const SD = {}
 for (const k of SEMESTER_KEYS) {
+  const raw = SEMESTERS_DATA[k]
   SD[k] = {
-    st: SEMESTERS_DATA[k].start,
-    en: SEMESTERS_DATA[k].end,
-    h: new Set(SEMESTERS_DATA[k].holidays),
-    hpd: SEMESTERS_DATA[k].hoursPerDay
+    st: raw.start,
+    en: raw.end,
+    h: new Set(raw.holidays),
+    hpd: raw.hoursPerDay,
+    shifts: {
+      day: { start: hhmmToMin(raw.shifts.day.start), end: hhmmToMin(raw.shifts.day.end) },
+      night: { start: hhmmToMin(raw.shifts.night.start), end: hhmmToMin(raw.shifts.night.end) }
+    }
   }
 }
 
 // Helper functions
 function ds(d) {
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')
+}
+
+// Current date/time in America/New_York, independent of the viewer's device timezone
+function easternParts(atMs = Date.now()) {
+  const fmt = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hour12: false
+  })
+  const parts = {}
+  for (const p of fmt.formatToParts(new Date(atMs))) {
+    if (p.type !== 'literal') parts[p.type] = p.value
+  }
+  let hour = parseInt(parts.hour, 10)
+  if (hour === 24) hour = 0 // some ICU implementations emit "24" for midnight under hour12:false
+  return {
+    y: parseInt(parts.year, 10),
+    m: parseInt(parts.month, 10),
+    d: parseInt(parts.day, 10),
+    hour,
+    minute: parseInt(parts.minute, 10)
+  }
+}
+
+function hhmmToMin(hhmm) {
+  const [h, m] = hhmm.split(':').map(Number)
+  return h * 60 + m
 }
 
 function cdays(s, e, h) {
@@ -72,21 +104,54 @@ for (const k of SEMESTER_KEYS) {
   PD[k] = cdays(SD[k].st, SD[k].en, SD[k].h).length
 }
 
-function tod() {
-  const n = new Date()
-  return new Date(n.getFullYear(), n.getMonth(), n.getDate(), 12)
+function tod(atMs) {
+  const p = easternParts(atMs)
+  return new Date(p.y, p.m - 1, p.d, 12)
 }
 
-function yest() {
-  const t = tod()
+function yest(atMs) {
+  const t = tod(atMs)
   t.setDate(t.getDate() - 1)
   return t
 }
 
-function tmr() {
-  const t = tod()
+function tmr(atMs) {
+  const t = tod(atMs)
   t.setDate(t.getDate() + 1)
   return t
+}
+
+function isClassDay(enrollmentKey, dateStr) {
+  const s = SD[enrollmentKey]
+  if (!s || dateStr < s.st || dateStr > s.en) return false
+  const dow = new Date(dateStr + 'T12:00:00').getDay()
+  if (dow === 0 || dow === 6) return false
+  return !s.h.has(dateStr)
+}
+
+function prorateFraction(nowMin, startMin, endMin) {
+  if (endMin <= startMin) return 0
+  if (nowMin <= startMin) return 0
+  if (nowMin >= endMin) return 1
+  return (nowMin - startMin) / (endMin - startMin)
+}
+
+function todayCreditedHours(enrollmentKey, shiftKey, atMs) {
+  const s = SD[enrollmentKey]
+  const todayStr = ds(tod(atMs))
+  if (!s || !isClassDay(enrollmentKey, todayStr)) return 0
+  const p = easternParts(atMs)
+  const win = s.shifts[shiftKey] || s.shifts.night
+  return prorateFraction(p.hour * 60 + p.minute, win.start, win.end) * s.hpd
+}
+
+function hasTodayShiftStarted(enrollmentKey, shiftKey, atMs) {
+  const s = SD[enrollmentKey]
+  const todayStr = ds(tod(atMs))
+  if (!s || !isClassDay(enrollmentKey, todayStr)) return false
+  const p = easternParts(atMs)
+  const win = s.shifts[shiftKey] || s.shifts.night
+  return (p.hour * 60 + p.minute) >= win.start
 }
 
 function defaultSem() {
@@ -102,29 +167,32 @@ function defaultSem() {
   return SEMESTER_KEYS[0]
 }
 
-function getCutoff(inclToday) {
-  return inclToday ? ds(tod()) : ds(yest())
+function getCutoff(inclToday, atMs) {
+  return inclToday ? ds(tod(atMs)) : ds(yest(atMs))
 }
 
-function ptd(enrollmentKey, inclToday) {
-  const cutoff = getCutoff(inclToday)
+function ptd(enrollmentKey, shiftKey, atMs) {
   const s = SD[enrollmentKey]
-  if (!s || cutoff < s.st) return 0
-  return cdays(s.st, cutoff <= s.en ? cutoff : s.en, s.h).length * s.hpd
+  if (!s) return 0
+  const wholeDayCutoff = ds(yest(atMs))
+  const wholeDayHours = wholeDayCutoff < s.st
+    ? 0
+    : cdays(s.st, wholeDayCutoff <= s.en ? wholeDayCutoff : s.en, s.h).length * s.hpd
+  return wholeDayHours + todayCreditedHours(enrollmentKey, shiftKey, atMs)
 }
 
-function calcDaysElapsed(enrollmentKey, inclToday) {
-  const cutoff = getCutoff(inclToday)
+function calcDaysElapsed(enrollmentKey, inclToday, atMs) {
+  const cutoff = getCutoff(inclToday, atMs)
   const s = SD[enrollmentKey]
   if (!s || cutoff < s.st) return 0
   return cdays(s.st, cutoff <= s.en ? cutoff : s.en, s.h).length
 }
 
-function calcDaysRemaining(enrollmentKey, inclToday) {
+function calcDaysRemaining(enrollmentKey, inclToday, atMs) {
   // Start the day after the elapsed cutoff so elapsed + remaining partition the
   // semester with no gap or overlap. Cutoff is today when today is included,
   // otherwise yesterday — so remaining starts tomorrow or today respectively.
-  const startS = inclToday ? ds(tmr()) : ds(tod())
+  const startS = inclToday ? ds(tmr(atMs)) : ds(tod(atMs))
   const s = SD[enrollmentKey]
   if (!s) return 0
   const st = startS > s.st ? startS : s.st
@@ -190,11 +258,21 @@ export function useAttendance() {
   // Reactive state
   const selectedSemester = ref(defaultSem())
   const hoursLogged = ref('')
-  const includeToday = ref(false)
+  const shift = ref('night')
   const awayPeriods = ref([])
   const impactRules = ref([])
 
   let nextId = 0
+
+  // Live clock tick so hours/days recompute automatically as time passes
+  const nowTick = ref(Date.now())
+  let tickTimer = null
+  onMounted(() => {
+    tickTimer = setInterval(() => { nowTick.value = Date.now() }, 30000)
+  })
+  onUnmounted(() => {
+    if (tickTimer) clearInterval(tickTimer)
+  })
 
   // Program semesters for the selected enrollment
   const programSemesters = computed(() => getProgramSemesters(selectedSemester.value))
@@ -218,13 +296,15 @@ export function useAttendance() {
     return raw !== '' ? Math.max(0, parseFloat(raw) || 0) : 0
   })
 
-  const possibleHours = computed(() => ptd(selectedSemester.value, includeToday.value))
+  const todayShiftStarted = computed(() => hasTodayShiftStarted(selectedSemester.value, shift.value, nowTick.value))
+
+  const possibleHours = computed(() => ptd(selectedSemester.value, shift.value, nowTick.value))
 
   const hasData = computed(() => possibleHours.value > 0)
 
-  const daysElapsed = computed(() => calcDaysElapsed(selectedSemester.value, includeToday.value))
+  const daysElapsed = computed(() => calcDaysElapsed(selectedSemester.value, todayShiftStarted.value, nowTick.value))
 
-  const daysRemaining = computed(() => calcDaysRemaining(selectedSemester.value, includeToday.value))
+  const daysRemaining = computed(() => calcDaysRemaining(selectedSemester.value, todayShiftStarted.value, nowTick.value))
 
   const attendanceRate = computed(() => {
     if (!hasData.value) return 0
@@ -450,7 +530,7 @@ export function useAttendance() {
     // State
     selectedSemester,
     hoursLogged,
-    includeToday,
+    shift,
     awayPeriods,
     impactRules,
 

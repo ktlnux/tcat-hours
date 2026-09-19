@@ -241,22 +241,43 @@ body {
   flex-shrink: 0;
 }
 
-.chklbl {
+.shiftrow {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: var(--txt2);
-  cursor: pointer;
+  gap: 10px;
   margin-bottom: 1.5rem;
-  user-select: none;
 }
 
-.chklbl input[type=checkbox] {
-  width: 15px;
-  height: 15px;
+.shiftlbl {
+  font-size: 13px;
+  color: var(--txt2);
+}
+
+.segctl {
+  display: inline-flex;
+  border: 1px solid var(--brd);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+
+.segbtn {
+  border: none;
+  background: var(--bg2);
+  color: var(--txt2);
+  font: inherit;
+  font-size: 13px;
+  padding: 6px 12px;
   cursor: pointer;
-  accent-color: var(--info-txt);
+}
+
+.segbtn + .segbtn {
+  border-left: 1px solid var(--brd);
+}
+
+.segbtn.act {
+  background: var(--info-bg);
+  color: var(--info-txt);
+  font-weight: 500;
 }
 
 .stgrid {

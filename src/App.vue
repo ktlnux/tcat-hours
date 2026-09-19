@@ -5,9 +5,9 @@
 
     <HoursInput
       v-model="hoursLogged"
-      :includeToday="includeToday"
+      :shift="shift"
       :semesterName="currentSemesterName"
-      @update:includeToday="includeToday = $event"
+      @update:shift="shift = $event"
     />
 
     <StatsGrid
@@ -84,7 +84,7 @@ import FeedbackButton from './components/FeedbackButton.vue'
 
 const {
   hoursLogged,
-  includeToday,
+  shift,
   awayPeriods,
   impactRules,
   hasInput,
@@ -117,6 +117,7 @@ const {
 
 const currentDate = computed(() => {
   return new Date().toLocaleDateString('en-US', {
+    timeZone: 'America/New_York',
     weekday: 'long',
     year: 'numeric',
     month: 'long',
