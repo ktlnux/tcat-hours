@@ -1,8 +1,8 @@
 <template>
   <div>
     <div class="enr-head">
-      <span class="enr-t">When did you start the program?</span>
-      <span class="enr-h">Select your enrollment semester — this sets your total program hours.</span>
+      <span class="enr-t">{{ title }}</span>
+      <span class="enr-h">{{ hint }}</span>
     </div>
     <div class="sgrid">
       <button
@@ -31,6 +31,14 @@ defineProps({
   semesters: {
     type: Array,
     required: true
+  },
+  title: {
+    type: String,
+    default: 'When did you start the program?'
+  },
+  hint: {
+    type: String,
+    default: 'Select your enrollment semester — this sets your total program hours.'
   }
 })
 

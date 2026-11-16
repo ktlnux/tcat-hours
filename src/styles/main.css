@@ -72,9 +72,163 @@ body {
   color: var(--txt);
 }
 
+/* Without an explicit width the mount point shrinks to its content inside
+   the centered body, so pages with narrow content (the calendar) render
+   narrower than 680px */
+#app {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
 .wrap {
   width: 100%;
   max-width: 680px;
+}
+
+/* App shell: nav + 680px main column */
+.shell {
+  width: 100%;
+  max-width: 680px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.sidenav {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sidenav-links {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--bg2);
+  border: 0.5px solid var(--brd);
+  border-radius: var(--rl);
+}
+
+.sidenav-title {
+  display: none;
+}
+
+.sidenav-link {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: var(--r);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--txt2);
+}
+
+.sidenav-link .ti {
+  font-size: 16px;
+}
+
+.sidenav-link:hover {
+  color: var(--txt);
+  background: var(--bg3);
+}
+
+.sidenav-link.act {
+  color: var(--info-txt);
+  background: var(--info-bg);
+}
+
+.sidenav-shift {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sidenav-shift-lbl {
+  font-size: 13px;
+  color: var(--txt2);
+}
+
+/* Desktop: full-height panel pinned to the left edge; the 680px main
+   column is centered in the space to its right */
+@media (min-width: 1000px) {
+  .shell {
+    max-width: none;
+    padding-left: 220px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+  }
+
+  .sidenav {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 220px;
+    justify-content: space-between;
+    gap: 0;
+    padding: 2rem 12px 1.5rem;
+    background: var(--bg2);
+    border-right: 0.5px solid var(--brd);
+    overflow-y: auto;
+  }
+
+  .sidenav-links {
+    flex-direction: column;
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: 0;
+  }
+
+  .sidenav-title {
+    display: block;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--txt3);
+    padding: 0 12px 8px;
+  }
+
+  .sidenav-link {
+    flex: none;
+    justify-content: flex-start;
+  }
+
+  .sidenav-shift {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 1rem 12px 0;
+    border-top: 0.5px solid var(--brd);
+  }
+
+  .sidenav-shift-lbl {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--txt3);
+  }
+
+  .sidenav-shift .segctl {
+    display: flex;
+  }
+
+  .sidenav-shift .segbtn {
+    flex: 1;
+    padding: 6px 8px;
+    white-space: nowrap;
+  }
+
+  .sidenav-shift .segbtn:not(.act) {
+    background: var(--bg);
+  }
 }
 
 .dl {
@@ -212,7 +366,7 @@ body {
   background: var(--bg);
   border: 0.5px solid var(--brd);
   border-radius: var(--r);
-  margin-bottom: 10px;
+  margin-bottom: 1.5rem;
 }
 
 .inrow:focus-within {
@@ -239,18 +393,6 @@ body {
   color: var(--txt2);
   white-space: nowrap;
   flex-shrink: 0;
-}
-
-.shiftrow {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 1.5rem;
-}
-
-.shiftlbl {
-  font-size: 13px;
-  color: var(--txt2);
 }
 
 .segctl {
@@ -864,4 +1006,123 @@ body {
 
 .mb-1 {
   margin-bottom: 1rem;
+}
+
+.cal-legend {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.cal-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--txt2);
+}
+
+.cal-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.cal-dot-class {
+  background: var(--bg);
+  border: 0.5px solid var(--brd2);
+}
+
+.cal-dot-noclass {
+  background: var(--wrn-bg);
+  border: 0.5px solid var(--wrn-brd);
+}
+
+.cal-dot-today {
+  background: var(--info-bg);
+  border: 2px solid var(--info-txt);
+}
+
+.mgrid-wrap {
+  margin-bottom: 1.75rem;
+}
+
+.mgrid-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--txt);
+  margin-bottom: 10px;
+}
+
+.mgrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.mgrid-h {
+  font-size: 11px;
+  color: var(--txt2);
+  text-align: center;
+  padding-bottom: 4px;
+}
+
+.mgrid-cell {
+  aspect-ratio: 1;
+  border-radius: var(--r);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: var(--txt);
+  background: var(--bg);
+  border: 0.5px solid var(--brd);
+}
+
+.mgrid-blank {
+  background: transparent;
+  border-color: transparent;
+}
+
+.mgrid-out {
+  background: transparent;
+  border-color: transparent;
+  color: var(--txt3);
+}
+
+.mgrid-noclass {
+  background: var(--wrn-bg);
+  border-color: var(--wrn-brd);
+  color: var(--wrn-txt);
+}
+
+.mgrid-today {
+  border: 2px solid var(--info-txt);
+  background: var(--info-bg);
+  color: var(--info-txt);
+  font-weight: 600;
+}
+
+.mgrid-daynum {
+  line-height: 1.2;
+}
+
+.mgrid-tag {
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.8;
+}
+
+@media (max-width: 500px) {
+  .mgrid {
+    gap: 3px;
+  }
+
+  .mgrid-cell {
+    font-size: 11px;
+  }
 }
