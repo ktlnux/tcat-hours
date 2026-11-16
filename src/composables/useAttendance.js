@@ -1,76 +1,26 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import scheduleData from '../data/schedule.json'
+import {
+  SEMESTERS_DATA,
+  SEMESTER_KEYS,
+  HIDDEN_SEMESTERS,
+  SD,
+  ds,
+  easternParts,
+  cdays,
+  tod,
+  yest,
+  tmr,
+  isClassDay,
+  defaultSem,
+  semOf,
+  fmtD,
+  formatDateRange
+} from './useSchedule'
+import { useShift } from './useShift'
 
 const THR = scheduleData.graduationThreshold
 const SEMESTERS_REQUIRED = scheduleData.semestersRequired || 3
-const SEMESTERS_DATA = scheduleData.semesters
-
-// Build sorted semester keys (chronologically by start date)
-const SEMESTER_KEYS = Object.keys(SEMESTERS_DATA).sort((a, b) => {
-  return SEMESTERS_DATA[a].start.localeCompare(SEMESTERS_DATA[b].start)
-})
-
-// Convert holidays arrays to Sets for efficient lookup
-const SD = {}
-for (const k of SEMESTER_KEYS) {
-  const raw = SEMESTERS_DATA[k]
-  SD[k] = {
-    st: raw.start,
-    en: raw.end,
-    h: new Set(raw.holidays),
-    hpd: raw.hoursPerDay,
-    shifts: {
-      day: { start: hhmmToMin(raw.shifts.day.start), end: hhmmToMin(raw.shifts.day.end) },
-      night: { start: hhmmToMin(raw.shifts.night.start), end: hhmmToMin(raw.shifts.night.end) }
-    }
-  }
-}
-
-// Helper functions
-function ds(d) {
-  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')
-}
-
-// Current date/time in America/New_York, independent of the viewer's device timezone
-function easternParts(atMs = Date.now()) {
-  const fmt = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'America/New_York',
-    year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit', hour12: false
-  })
-  const parts = {}
-  for (const p of fmt.formatToParts(new Date(atMs))) {
-    if (p.type !== 'literal') parts[p.type] = p.value
-  }
-  let hour = parseInt(parts.hour, 10)
-  if (hour === 24) hour = 0 // some ICU implementations emit "24" for midnight under hour12:false
-  return {
-    y: parseInt(parts.year, 10),
-    m: parseInt(parts.month, 10),
-    d: parseInt(parts.day, 10),
-    hour,
-    minute: parseInt(parts.minute, 10)
-  }
-}
-
-function hhmmToMin(hhmm) {
-  const [h, m] = hhmm.split(':').map(Number)
-  return h * 60 + m
-}
-
-function cdays(s, e, h) {
-  const c = new Date(s + 'T12:00:00')
-  const end = new Date(e + 'T12:00:00')
-  const days = []
-  while (c <= end) {
-    const dw = c.getDay()
-    if (dw >= 1 && dw <= 5 && !h.has(ds(c))) {
-      days.push(ds(c))
-    }
-    c.setDate(c.getDate() + 1)
-  }
-  return days
-}
 
 // Get the program semesters for a given enrollment semester (3 consecutive)
 function getProgramSemesters(enrollmentKey) {
@@ -104,31 +54,6 @@ for (const k of SEMESTER_KEYS) {
   PD[k] = cdays(SD[k].st, SD[k].en, SD[k].h).length
 }
 
-function tod(atMs) {
-  const p = easternParts(atMs)
-  return new Date(p.y, p.m - 1, p.d, 12)
-}
-
-function yest(atMs) {
-  const t = tod(atMs)
-  t.setDate(t.getDate() - 1)
-  return t
-}
-
-function tmr(atMs) {
-  const t = tod(atMs)
-  t.setDate(t.getDate() + 1)
-  return t
-}
-
-function isClassDay(enrollmentKey, dateStr) {
-  const s = SD[enrollmentKey]
-  if (!s || dateStr < s.st || dateStr > s.en) return false
-  const dow = new Date(dateStr + 'T12:00:00').getDay()
-  if (dow === 0 || dow === 6) return false
-  return !s.h.has(dateStr)
-}
-
 function prorateFraction(nowMin, startMin, endMin) {
   if (endMin <= startMin) return 0
   if (nowMin <= startMin) return 0
@@ -152,19 +77,6 @@ function hasTodayShiftStarted(enrollmentKey, shiftKey, atMs) {
   const p = easternParts(atMs)
   const win = s.shifts[shiftKey] || s.shifts.night
   return (p.hour * 60 + p.minute) >= win.start
-}
-
-function defaultSem() {
-  const today = ds(tod())
-  // Find current semester
-  for (const k of SEMESTER_KEYS) {
-    if (today >= SD[k].st && today <= SD[k].en) return k
-  }
-  // Find most recent past semester
-  for (let i = SEMESTER_KEYS.length - 1; i >= 0; i--) {
-    if (today > SD[SEMESTER_KEYS[i]].en) return SEMESTER_KEYS[i]
-  }
-  return SEMESTER_KEYS[0]
 }
 
 function getCutoff(inclToday, atMs) {
@@ -198,18 +110,6 @@ function calcDaysRemaining(enrollmentKey, inclToday, atMs) {
   const st = startS > s.st ? startS : s.st
   if (st > s.en) return 0
   return cdays(st, s.en, s.h).length
-}
-
-function semOf(d, semesterKeys) {
-  for (const k of semesterKeys) {
-    if (d >= SD[k].st && d <= SD[k].en) return k
-  }
-  return null
-}
-
-function fmtD(str) {
-  const [y, m, d] = str.split('-')
-  return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][+m - 1] + ' ' + +d + ', ' + y
 }
 
 function fmtH(n) {
@@ -247,18 +147,11 @@ function getStatusColor(pct) {
   }
 }
 
-function formatDateRange(start, end) {
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-  const [, sm, sd] = start.split('-')
-  const [, em, ed] = end.split('-')
-  return `${months[+sm - 1]} ${+sd} – ${months[+em - 1]} ${+ed}`
-}
-
 export function useAttendance() {
   // Reactive state
   const selectedSemester = ref(defaultSem())
   const hoursLogged = ref('')
-  const shift = ref('night')
+  const { shift } = useShift()
   const awayPeriods = ref([])
   const impactRules = ref([])
 
@@ -510,7 +403,6 @@ export function useAttendance() {
   }
 
   // Semesters list for selector (only show semesters that can start a full program)
-  const HIDDEN_SEMESTERS = new Set(['spring-2025', 'summer-2025', 'spring-2027'])
   const maxStartIndex = SEMESTER_KEYS.length - SEMESTERS_REQUIRED
   const semesters = SEMESTER_KEYS.slice(0, maxStartIndex + 1)
     .filter(k => !HIDDEN_SEMESTERS.has(k))

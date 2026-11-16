@@ -41,23 +41,6 @@
       >
       <span class="iu">hours logged</span>
     </div>
-    <div class="shiftrow">
-      <span class="shiftlbl">Shift</span>
-      <div class="segctl" role="group" aria-label="Class shift">
-        <button
-          type="button"
-          class="segbtn"
-          :class="{ act: shift === 'day' }"
-          @click="$emit('update:shift', 'day')"
-        >Day class</button>
-        <button
-          type="button"
-          class="segbtn"
-          :class="{ act: shift === 'night' }"
-          @click="$emit('update:shift', 'night')"
-        >Night class</button>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -69,17 +52,13 @@ defineProps({
     type: [String, Number],
     default: ''
   },
-  shift: {
-    type: String,
-    default: 'night'
-  },
   semesterName: {
     type: String,
     default: ''
   }
 })
 
-defineEmits(['update:modelValue', 'update:shift'])
+defineEmits(['update:modelValue'])
 
 const showInstructions = ref(false)
 const base = import.meta.env.BASE_URL
